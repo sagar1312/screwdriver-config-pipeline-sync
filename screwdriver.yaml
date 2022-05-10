@@ -1,0 +1,70 @@
+shared:
+  image: node:8
+  annotations:
+    build_details: &build_details >-
+      echo SD_JOB_NAME = $SD_JOB_NAME
+      echo SD_PULL_REQUEST = $SD_PULL_REQUEST
+      echo SD_BUILD_ID = $SD_BUILD_ID
+      echo SD_EVENT_ID = $SD_EVENT_ID
+      echo SD_PARENT_BUILD_ID = $SD_PARENT_BUILD_ID
+      echo SD_PARENT_EVENT_ID = $SD_PARENT_EVENT_ID
+      echo SD_PR_PARENT_JOB_ID = $SD_PR_PARENT_JOB_ID
+      echo meta.parameters = $(meta get parameters)
+      echo meta.build.jobName = $(meta get build.jobName)
+      echo meta.build = $(meta get build)
+  settings:
+    email:
+      addresses: [ dsagar@yahooinc.com ]
+      statuses: [ SUCCESS, FAILURE ]
+parameters:
+  param_superuser:
+    value: yes
+  param_region: us-east
+  param_sports:
+    value: [ badminton, tennis ]
+    description: favorite sports
+
+jobs:
+  component:
+    requires: [~pr, ~commit]
+    environment:
+      JUMP_HOST: jump-host-hello
+      API_REPLICAS: 2
+    parameters:
+      param_sports:
+        value: [ cricket, basketball, baseball ]
+        description: favorite sports
+      param_color:
+        value: red
+      param_car:
+        value: [Audi, BMW, Tesla]
+        description: car you own
+    steps:
+      - build_details: *build_details
+      - param_superuser: echo param_superuser = $(meta get parameters.param_superuser)
+      - param_region: echo param_region = $(meta get parameters.param_region)
+      - param_sports: echo param_sports = $(meta get parameters.param_sports)
+      - param_color: echo param_color = $(meta get parameters.param_color)
+      - param_car: echo param_car = $(meta get parameters.param_car)
+      - param_music: echo param_music = $(meta get parameters.param_music)
+
+  publish:
+    requires: component
+    image: node:12
+    environment:
+      JUMP_HOST: jump-host-world
+      API_REPLICAS: 5
+    parameters:
+      param_region: us-west
+      param_color: white
+      param_music:
+        value: [ Jazz, Rock, Country ]
+        description: favorite music genre
+    steps:
+      - build_details: *build_details
+      - param_superuser: echo param_superuser = $(meta get parameters.param_superuser)
+      - param_region: echo param_region = $(meta get parameters.param_region)
+      - param_sports: echo param_sports = $(meta get parameters.param_sports)
+      - param_color: echo param_color = $(meta get parameters.param_color)
+      - param_music: echo param_music = $(meta get parameters.param_music)
+      - param_car: echo param_car = $(meta get parameters.param_car)
